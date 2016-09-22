@@ -89,7 +89,7 @@ struct ReturnObject* getFunction(struct Graph* graph, char request[]) {
     indexOfFirstCurly = (int)(pointerToFirstCurly - substring);
     strcpy(jsonSubstring, substring+indexOfFirstCurly);
 
-    //printf("\nThe JSON: %s\n", jsonSubstring);
+    printf("\nThe JSON: %s\n", jsonSubstring);
 
     int firstNodeId = -1, secondNodeId = -1;
 
