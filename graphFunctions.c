@@ -305,7 +305,7 @@ void printGraph(struct Graph* graph) {
 			struct Edge* temp = graph->nodeArray[i].head;
 			int j = 0;
 			while(temp) {
-				printf("%llu(%i) -> ", temp->connectedId, j);
+				printf("%" PRIu64 "(%i) -> ", temp->connectedId, j);
 				temp = temp->next;
 				j++;
 			}
