@@ -1,3 +1,4 @@
+#define __STDC_FORMAT_MACROS
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -86,7 +87,7 @@ int remNode(struct Graph* graph, uint64_t nodeId) {
 		}
 
 		else {
-			printf("\nthere are connections on node %lld", nodeId);
+			printf("\nthere are connections on node %" PRIu64 "", nodeId);
 			struct Edge* head = graph->nodeArray[nodeIndex].head;
 			struct Edge* temp;
 
@@ -249,7 +250,7 @@ int remEdge(struct Graph* graph, uint64_t firstNodeId, uint64_t secondNodeId) {
 	int firstNodeIndex = nodeExist(graph, firstNodeId);
 	int secondNodeIndex = nodeExist(graph, secondNodeId);
 
-	printf("\nremoved connection between: %lld %lld\n", firstNodeId, secondNodeId);
+	printf("\nremoved connection between: %" PRIu64 " %" PRIu64 "\n", firstNodeId, secondNodeId);
 
 	if (firstNodeIndex != -1 && secondNodeIndex != -1 && firstNodeId!=secondNodeId) {
 		int doesEdgeExist = edgeExist(graph, firstNodeIndex, secondNodeId);
@@ -296,7 +297,7 @@ void printGraph(struct Graph* graph) {
 	for (int i=0; i<graphSize; i++) {
 		int nodeId = graph->nodeArray[i].nodeId;
 		uint64_t nodeIndex = nodeExist(graph, nodeId);
-		printf("%i index: %lld connections: ", nodeId, nodeIndex);
+		printf("%i index: %" PRIu64 " connections: ", nodeId, nodeIndex);
 
 		int neighborCount = graph->nodeArray[i].neighborCount;
 		if (neighborCount != 0) {

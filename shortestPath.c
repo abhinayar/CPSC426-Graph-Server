@@ -1,3 +1,4 @@
+#define __STDC_FORMAT_MACROS
 #include <stdio.h>
 #include <inttypes.h>
 #include <stdlib.h>
@@ -39,7 +40,7 @@ void Print(struct Q* Q) {
 	}
 
 	while(temp != NULL) {
-		//printf("%lld-> ",temp->el);
+		//printf("%" PRIu64 "-> ",temp->el);
 		temp = temp->next;
 	}
 	//printf("\n");
@@ -108,15 +109,6 @@ bool QExist(struct Q* Q) {
 }
 
 
-
-
-
-
-
-
-
-
-
 uint64_t shortestPath(struct Graph* graph, uint64_t startNodeId, uint64_t endNodeId) {
 	//check to see whether the start/end node exists
 	uint64_t startNodeIndex = nodeExist(graph, startNodeId);
@@ -126,8 +118,8 @@ uint64_t shortestPath(struct Graph* graph, uint64_t startNodeId, uint64_t endNod
 		//level for the first node = 0
 		graph->nodeArray[startNodeIndex].level = 0;
 
-		//printf("we begin the function.\nThe startNodeId is %lld and the endNodeId is %lld\n", startNodeId, endNodeId);
-		//printf("the indices are %lld and %lld resp.", startNodeIndex, endNodeIndex);
+		//printf("we begin the function.\nThe startNodeId is %" PRIu64 " and the endNodeId is %" PRIu64 "\n", startNodeId, endNodeId);
+		//printf("the indices are %" PRIu64 " and %" PRIu64 " resp.", startNodeIndex, endNodeIndex);
 
 		//create new Queue and enqueue start node
 		struct Q* Q = createQ();
@@ -137,13 +129,13 @@ uint64_t shortestPath(struct Graph* graph, uint64_t startNodeId, uint64_t endNod
 		do {
 			//get the node to test by dequeueing Q
 			uint64_t currNodeId = DeQ(Q);
-			//printf("Now we are in the do-while loop\nThe currNodeId is %lld\n", currNodeId);
+			//printf("Now we are in the do-while loop\nThe currNodeId is %" PRIu64 "\n", currNodeId);
 			//find dequeued node Index
 			uint64_t currNodeIndex = nodeExist(graph, currNodeId);
-			//printf("The currNodeIndex is %lld\n", currNodeIndex);
+			//printf("The currNodeIndex is %" PRIu64 "\n", currNodeIndex);
 			//get number of neighbors of currNode
 			uint64_t numNeighbors = graph->nodeArray[currNodeIndex].neighborCount;
-			//printf("The numNeighbors of currentNode is %lld\n", numNeighbors);
+			//printf("The numNeighbors of currentNode is %" PRIu64 "\n", numNeighbors);
 			//then get the array of neighbors
 			uint64_t* neighborArray = getNeighbors(graph, currNodeIndex);
 
@@ -156,16 +148,16 @@ uint64_t shortestPath(struct Graph* graph, uint64_t startNodeId, uint64_t endNod
 
 			//printf("here are the neighbors: [");
 			for (uint64_t i = 0; i < numNeighbors; i++) {
-				//printf("%lld ", neighborArray[i]);
+				//printf("%" PRIu64 " ", neighborArray[i]);
 			}
 			//printf("]\n");
 
-			//printf("checking nodeArray[1] and nodeArrayInt[1]: %lld %i\n", neighborArray[1], 66);
+			//printf("checking nodeArray[1] and nodeArrayInt[1]: %" PRIu64 " %i\n", neighborArray[1], 66);
 			
 			for(uint64_t i = 0; i < numNeighbors; i++) {
 				//iterate through neighbor array
 				uint64_t currNeighbor = neighborArray[i];
-				//printf("the current neighbor id is %lld and its index is %lld\n", currNeighbor, i);
+				//printf("the current neighbor id is %" PRIu64 " and its index is %" PRIu64 "\n", currNeighbor, i);
 				
 				//FIRST check whether this neighbor is the node we're looking for
 				if (endNodeId == currNeighbor) {
@@ -176,12 +168,12 @@ uint64_t shortestPath(struct Graph* graph, uint64_t startNodeId, uint64_t endNod
 				//if this is not the node we're looking for
 				//get index of neighbor in graph
 				uint64_t neighborIndex = nodeExist(graph, currNeighbor);
-				//printf("The index of the current neighbor in graph is %lld\n", neighborIndex);
+				//printf("The index of the current neighbor in graph is %" PRIu64 "\n", neighborIndex);
 
 				//check if this node has been traversed
 				if (graph->nodeArray[neighborIndex].color == 2) {
 					//do nothing
-					//printf("The color is black so we are skipping node # %lld\n", currNeighbor);
+					//printf("The color is black so we are skipping node # %" PRIu64 "\n", currNeighbor);
 				}
 
 				else if (graph->nodeArray[neighborIndex].color == 0) {
@@ -189,14 +181,14 @@ uint64_t shortestPath(struct Graph* graph, uint64_t startNodeId, uint64_t endNod
 					//change the level of this node
 					graph->nodeArray[neighborIndex].level = (graph->nodeArray[currNodeIndex].level + 1);
 					graph->nodeArray[neighborIndex].color = 1;
-					//printf("setting level of %lld to %lld\n", currNeighbor, graph->nodeArray[currNodeIndex].level + 1);
+					//printf("setting level of %" PRIu64 " to %" PRIu64 "\n", currNeighbor, graph->nodeArray[currNodeIndex].level + 1);
 					//now EnQ this node to be traversed
 					EnQ(Q, currNeighbor);
 				}
 
 				else if (graph->nodeArray[neighborIndex].color == 1) {
 					if (inQueue(Q, currNeighbor) == 0) {
-						//printf("enquing %lld because we have seen it before but not traversed\n", currNeighbor);
+						//printf("enquing %" PRIu64 " because we have seen it before but not traversed\n", currNeighbor);
 						EnQ(Q, currNeighbor);
 					}
 
@@ -211,7 +203,7 @@ uint64_t shortestPath(struct Graph* graph, uint64_t startNodeId, uint64_t endNod
 			}
 
 			graph->nodeArray[currNodeIndex].color = 2;
-			//printf("Changed color of node in graph index %lld\n", currNodeIndex);
+			//printf("Changed color of node in graph index %" PRIu64 "\n", currNodeIndex);
 			Print(Q);
 		} while(Q->front != NULL);
 

@@ -1,3 +1,4 @@
+#define __STDC_FORMAT_MACROS
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -273,8 +274,8 @@ char* parse(struct ReturnObject* retObject, char reply[]) {
     //This is the shortest path ret code
     else if (httpStatus == -997) {
         uint64_t distance = retObject->distance;
-        printf("distance: %lld\n", distance);
-        snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: %f\nContent-Type: application/json\n\n{\"node_a_id\":%i,\"node_b_id\":%i,\"distance\":%lld}\r\n", 39 + floor(log10(abs(node1)) + 1) + floor(log10(abs(node2)) + 1) + floor(log10(abs(distance)) + 1), node1, node2, distance);
+        printf("distance: %" PRIu64 "\n", distance);
+        snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: %f\nContent-Type: application/json\n\n{\"node_a_id\":%i,\"node_b_id\":%i,\"distance\":%" PRIu64 "}\r\n", 39 + floor(log10(abs(node1)) + 1) + floor(log10(abs(node2)) + 1) + floor(log10(abs(distance)) + 1), node1, node2, distance);
     }
 
     //basically at ALL other times when we have the first node and not the other
