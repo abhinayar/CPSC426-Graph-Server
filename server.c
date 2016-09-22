@@ -277,31 +277,39 @@ char* parse(struct ReturnObject* retObject, char* reply) {
     else if (httpStatus == -998) {
         //deal with getNeighbors
         uint64_t* neighborArray = retObject->neighborArray;
+        char* output;
 
-        char textArray[(retObject->neighborArrayLength)];
-        int i=0;
-        int index = 0;
-        for (i=0; i<(retObject->neighborArrayLength); i++)
-           index += snprintf(&textArray[index], (retObject->neighborArrayLength), "%i", (int)neighborArray[i]);
-        
-        printf("print neighbor array [ ");
-        for (int i=0; i < ((int)retObject->neighborArrayLength); i++) {
-            printf("%c ", textArray[i]);
+        if (retObject->neighborArrayLength > 0) {
+            char textArray[(retObject->neighborArrayLength)];
+            int i=0;
+            int index = 0;
+            for (i=0; i<(retObject->neighborArrayLength); i++)
+               index += snprintf(&textArray[index], (retObject->neighborArrayLength), "%i", (int)neighborArray[i]);
+            
+            printf("print neighbor array [ ");
+            for (int i=0; i < ((int)retObject->neighborArrayLength); i++) {
+                printf("%c ", textArray[i]);
+            }
+            printf("]\n");
+
+            char commaArray[retObject->neighborArrayLength-1];
+            for(i = 0; i < ((int)(retObject->neighborArrayLength)-1); i++) {
+                commaArray[i] = ',';
+            }
+            commaArray[retObject->neighborArrayLength-1] = '\0';
+
+            output=(char*)malloc(strlen(textArray)+strlen(commaArray)+1);
+            strMerge(textArray, commaArray, output);
+            printf("output: %s",output);
+
+            snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: %i\nContent-Type: application/json\n\n{\"node_id\":%i,\"neighbors\":[%s]}\r\n", 12 + (int)(floor(log10(abs(node1))) + 1) + 15 + (int)strlen(output), node1, output);
         }
-        printf("]\n");
 
-        char commaArray[retObject->neighborArrayLength-1];
-        for(i = 0; i < ((int)(retObject->neighborArrayLength)-1); i++) {
-            commaArray[i] = ',';
+        if (retObject->neighborArrayLength == 0) {
+            snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: %i\nContent-Type: application/json\n\n{\"node_id\":%i,\"neighbors\":[]}\r\n", 12 + (int)(floor(log10(abs(node1))) + 1) + 15, node1);
         }
-        commaArray[retObject->neighborArrayLength-1] = '\0';
 
-        char* output=(char*)malloc(strlen(textArray)+strlen(commaArray)+1);
-        strMerge(textArray, commaArray, output);
-        printf("output: %s",output);
         
-
-        snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: %i\nContent-Type: application/json\n\n{\"node_id\":%i,\"neighbors\":[%s]}\r\n", 12 + (int)(floor(log10(abs(node1))) + 1) + 15 + (int)strlen(output), node1, output);
     }
 
     //This is the shortest path ret code
