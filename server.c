@@ -255,30 +255,27 @@ char* parse(struct ReturnObject* retObject, char* reply) {
     else if (httpStatus == -998) {
         //deal with getNeighbors
         uint64_t* neighborArray = retObject->neighborArray;
-        char neighborText[(retObject->neighborArrayLength*2)];
 
         int j = 0;
-        for (int i=0; i < (retObject->neighborArrayLength*2); i++) {
-            if (i%2 == 0) {
-                neighborText[i] = (int)neighborArray[j] + '0';
-                j++;
+        char textArray[(retObject->neighborArrayLength*2)-1];
+        for (int i=0; i<(retObject->neighborArrayLength*2)-1; i++) {
+            if (i % 2 == 0) {
+                j += snprintf(&textArray[i], (retObject->neighborArrayLength*2)-1, "%i", (int)neighborArray[j]);
             }
 
             else {
-                neighborText[i] = ',';
+                sprintf(&textArray[i], ",");
             }
-        }
+        } 
 
-        /*
+        
         printf("print neighbor array [ ");
-        for (int i=0; i < (retObject->neighborArrayLength*2); i++) {
-            printf("%c ", neighborText[i]);
+        for (int i=0; i < (retObject->neighborArrayLength*2-1); i++) {
+            printf("%c ", textArray[i]);
         }
         printf("]\n");
-        */
 
-        neighborText[retObject->neighborArrayLength*2] = '\0';
-        snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: %i\nContent-Type: application/json\n\n{\"node_id\":%i,\"neighbors\":[%s]}\r\n", 12 + (int)(floor(log10(abs(node1))) + 1) + 16 + (int)(retObject->neighborArrayLength*2), node1, neighborText);
+        snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: %i\nContent-Type: application/json\n\n{\"node_id\":%i,\"neighbors\":[%s]}\r\n", 12 + (int)(floor(log10(abs(node1))) + 1) + 16 + (int)(retObject->neighborArrayLength*2), node1, textArray);
     }
 
     //This is the shortest path ret code
