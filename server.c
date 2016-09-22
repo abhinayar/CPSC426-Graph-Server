@@ -83,7 +83,7 @@ struct ReturnObject* getFunction(struct Graph* graph, char request[]) {
 
     //printf("\nfunction name: %s | functionIndex: %i\n", functionName, functionIndex);
 
-    char jsonSubstring[100];
+    char jsonSubstring[1024];
     int indexOfFirstCurly;
     char* pointerToFirstCurly = strchr(substring, '{');
     indexOfFirstCurly = (int)(pointerToFirstCurly - substring);
