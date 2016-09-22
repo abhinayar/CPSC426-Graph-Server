@@ -292,14 +292,21 @@ char* parse(struct ReturnObject* retObject, char* reply) {
             }
             printf("]\n");
 
-            char commaArray[retObject->neighborArrayLength-1];
-            for(i = 0; i < ((int)(retObject->neighborArrayLength)-1); i++) {
-                commaArray[i] = ',';
-            }
-            commaArray[retObject->neighborArrayLength-1] = '\0';
+            if (retObject->neighborArrayLength > 1) {
+                char commaArray[strlen(textArray) - 1];
+                for(i = 0; i < strlen(textArray)-1; i++) {
+                    commaArray[i] = ',';
+                }
+                commaArray[retObject->neighborArrayLength-1] = '\0';
 
-            output=(char*)malloc(strlen(textArray)+strlen(commaArray)+1);
-            strMerge(textArray, commaArray, output);
+                output=(char*)malloc(strlen(textArray)+strlen(commaArray)+1);
+                strMerge(textArray, commaArray, output);
+            }
+
+            else {
+                output = textArray;
+            }
+            
             printf("output: %s",output);
 
             snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: %i\nContent-Type: application/json\n\n{\"node_id\":%i,\"neighbors\":[%s]}\r\n", 12 + (int)(floor(log10(abs(node1))) + 1) + 15 + (int)strlen(output), node1, output);
