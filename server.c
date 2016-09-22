@@ -278,7 +278,7 @@ char* parse(struct ReturnObject* retObject, char* reply) {
         */
 
         neighborText[retObject->neighborArrayLength*2] = '\0';
-        snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: %f\nContent-Type: application/json\n\n{\"node_id\":%i,\"neighbors\":[%s]}\r\n", 12 + (floor(log10(abs(node1))) + 1) + 14 + (retObject->neighborArrayLength*2), node1, neighborText);
+        snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: %i\nContent-Type: application/json\n\n{\"node_id\":%i,\"neighbors\":[%s]}\r\n", 12 + (int)(floor(log10(abs(node1))) + 1) + 16 + (int)(retObject->neighborArrayLength*2), node1, neighborText);
     }
 
     //This is the shortest path ret code
