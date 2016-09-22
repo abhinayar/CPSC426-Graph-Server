@@ -266,7 +266,8 @@ char* parse(struct ReturnObject* retObject, char* reply) {
         char textArray[(retObject->neighborArrayLength*2)-1];
         for (int i=0; i<(retObject->neighborArrayLength*2)-1; i++) {
             if (i % 2 == 0) {
-                j += snprintf(&textArray[i], (retObject->neighborArrayLength*2)-1, "%i", (int)neighborArray[j]);
+                sprintf(&textArray[i], "%i", (int)neighborArray[j]);
+                j++;
             }
 
             else {
