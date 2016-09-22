@@ -68,7 +68,7 @@ struct ReturnObject* getFunction(struct Graph* graph, char request[], int length
     strncpy(functionName, substring, lengthOfFunction * sizeof(char));
     //null terminate
     functionName[lengthOfFunction] = '\0';
-    //printf("func name: %s\n", functionName);
+    printf("func name: %s\n", functionName);
 
     //now get the json data
 
