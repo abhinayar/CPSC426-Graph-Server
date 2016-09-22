@@ -276,6 +276,7 @@ char* parse(struct ReturnObject* retObject, char* reply) {
 
     //This is the getNeighbors return code
     else if (httpStatus == -998) {
+        /*
         //deal with getNeighbors
         uint64_t* neighborArray = retObject->neighborArray;
         char* output;
@@ -317,7 +318,8 @@ char* parse(struct ReturnObject* retObject, char* reply) {
             snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: %i\nContent-Type: application/json\n\n{\"node_id\":%" PRIu64 ",\"neighbors\":[]}\r\n", 12 + (int)(floor(log10(abs(node1))) + 1) + 15, node1);
         }
 
-        
+        */
+        snprintf(reply, 1024, "HTTP/1.1 400 OK\r\nContent-Length: 18\r\nContent-Type: application/json\r\n\r\n{\"in_graph\":false}\r\n");
     }
 
     //This is the shortest path ret code
