@@ -11,6 +11,7 @@
 #include <signal.h>
 #include "graphFunctions.h"
 #include "shortestPath.h"
+#include "mongoose.h"
 
 struct ReturnObject {
     int httpStatus;
@@ -34,26 +35,43 @@ struct ReturnObject* createRetObject() {
     return newRetObj;
 }
 
-struct ReturnObject* getFunction(struct Graph* graph, char request[]) {
+struct ReturnObject* getFunction(struct Graph* graph, char request[], int length) {
+    //Oh boy another LONG convoluted function for string parsing in C
+
+    //First let us null terminate the request string from Mongoose
+    request[length] = '\0';
+
     //First get the function name
+    //Get request length
     int requestLength = strlen(request);
+    //Substring length is reqLength - 13 because the func. name starts at the 13th char
     int substringLength = requestLength - 13;
     
+    //Create the buffer/string
     char substring[substringLength];
+    //copy the request starting at the 13th char 
     strcpy(substring, request+13);
 
+    //The first whitespace is the first char after the funct name
     int indexOfFirstWhitespace;
+    //Find the index of it by strchr, etc.
     char* pointerOfFirstWhitespace = strchr(substring, ' ');
     indexOfFirstWhitespace = (int)(pointerOfFirstWhitespace - substring);
     
+    //The index of the first whitespace will be the length of the funct.
     int lengthOfFunction = indexOfFirstWhitespace;
+    //define functionName buffer
     char functionName[lengthOfFunction];
 
+    //strncpy that shit...
     strncpy(functionName, substring, lengthOfFunction * sizeof(char));
+    //null terminate
     functionName[lengthOfFunction] = '\0';
 
     //now get the json data
-    //Get the number of inputs we are looking for
+
+    //function array to iterate over
+    //because we cant do things like string to function conversion in C.
     const char* functionList[9];
     functionList[0] = "add_node";
     functionList[1] = "remove_node";
@@ -65,41 +83,55 @@ struct ReturnObject* getFunction(struct Graph* graph, char request[]) {
     functionList[7] = "shortest_path";
     functionList[8] = "print_graph";
 
-    int numInputs = 0, functionIndex = -1;
+    //Some pretty useful vars.
+    int functionIndex = -1;
 
+    //compare the parsed function name to the array so we can figure out what it is that we want to do.
     for (int i=0; i<9; i++) {
         if (strcmp(functionList[i], functionName) == 0) {
             functionIndex = i;
         }
     }
 
-    if (functionIndex < 3) {
-        numInputs = 1;
-    }
+    //now let's get the JSON w some string bs (or magic)
+    //MAX for json has got to be something like 1024
+    //But we will adjust as needed.
 
-    else {
-        numInputs = 2;
-    }
-
-    //printf("\nfunction name: %s | functionIndex: %i\n", functionName, functionIndex);
-
-    char jsonSubstring[1024];
+    //First curly indicates start of JSON
     int indexOfFirstCurly;
+    //find the ptr to 1st {
     char* pointerToFirstCurly = strchr(substring, '{');
+    //find the index
     indexOfFirstCurly = (int)(pointerToFirstCurly - substring);
-    strcpy(jsonSubstring, substring+indexOfFirstCurly);
+    //length of JSON will be length of sbstring - index of first curly (no payload after jSON assumption... please don't be wrong)
+    //Honestly making a bunch of assumptions about input validity here so pray for me. (i.e. the specs could be more detailed)
+    int lengthOfJSON = strlen(substring) - (int)indexOfFirstCurly;
+
+    //define json buff
+    char jsonSubstring[lengthOfJSON];
+    //use STRNcpy... hear its safer than strcpy
+    strncpy(functionName, substring+indexOfFirstCurly, lengthOfJSON * sizeof(char));
+    //null term.
+    jsonSubstring[lengthOfJSON] = '\0';
 
     printf("\nThe JSON: %s\n", jsonSubstring);
 
-    int firstNodeId = -1, secondNodeId = -1;
-
+    //create the RETURN OBJECT
+    //We're finally going to do something returnable
     struct ReturnObject* retObject = createRetObject();
 
+    //PARSE THE JSON TO GET THE INT VALS
+    //Hacked together after a lot of Stackoverflowing and soul searching
+    //Its 3AM give my humor a break.
     int i = 0;
     char* p = jsonSubstring;
     while (*p) { // While there are more characters to process...
         if (isdigit(*p)) { // Upon finding a digit, ...
             long val = strtol(p, &p, 10); // Read a number, ...
+
+            //ASSUMING THERE ARE ONLY TWO ID'S PASSED MAX
+            //WILL break for more than two
+            // slash will only get the first 2 nums.
 
             if (i == 0) {
                 retObject->firstNodeId = val;
@@ -121,9 +153,15 @@ struct ReturnObject* getFunction(struct Graph* graph, char request[]) {
         }
     }
 
+    //some vars for the hell of it.
+    int firstNodeId = -1, secondNodeId = -1;
+    //Set the values of those wonderful vars we created for ease of use.
     firstNodeId = retObject->firstNodeId, secondNodeId = retObject->secondNodeId;
 
     //now get into actually calling the functions
+    //Mess of case function type things
+    //BUT my C skills suck and idk how to write those so YOLO.
+    //function values correspond to functionList array... don't be lazy you can look.
 	if (functionIndex == 0) {
 		retObject->httpStatus = addNode(graph, firstNodeId);
 	}
@@ -179,134 +217,126 @@ struct ReturnObject* getFunction(struct Graph* graph, char request[]) {
         retObject->httpStatus = 202;
     }
 
+    //why not print the graph anyways?
+    //Cant fail the pset worse than I already am right?
     printGraph(graph);
     return retObject;
 }
 
-static volatile int keepGoing = 1; //global var for termination
-void sigintHandler(int sig_num)
-{
-    /* Reset handler to catch SIGINT next time.
-       Refer http://en.cppreference.com/w/c/program/signal */
-    //signal(SIGINT, sigintHandler);
-    printf("Caught SIGINT, exiting now\n");
-    keepGoing = 0;
-}
+char* parse(struct ReturnObject* retObject, char reply[]) {
+    //Begin the long convoluted parsing function
 
-void error(const char *msg)
-{
-    perror(msg);
-    exit(1);
-}
+    //Get the HTTPStatus from retObject
+    //httpStatus may not always reflect the actual HTTP Status
+    //Sometimes it returns codes which we will parse/analyze here into a char buffer
+    int httpStatus = retObject->httpStatus, node1 = retObject->firstNodeId, node2 = retObject->secondNodeId;
 
-int main(int argc, char *argv[])
-{
-    struct sigaction sa;
-    sa.sa_handler = &sigintHandler;
-    sigfillset(&sa.sa_mask);
+    //These are the error httpStatusie
+    if (httpStatus == 204 || httpStatus == 400 || httpStatus == -1) {
+        snprintf(reply, 1024, "HTTP/1.1 %i OK\n\nBad Req. ID: %i", httpStatus, httpStatus);
+    }
 
-	int create_socket, new_socket;    
-	socklen_t addrlen;    
-	int bufsize = 5024;    
-	char *buffer = malloc(bufsize);    
-	struct sockaddr_in address;    
+    //This is the in_graph for get_node 
+    else if (httpStatus == 202) {
+        //printf("print graph");
+        snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: 17\nContent-Type: application/json\n\n{\"in_graph\":true}\r\n");
+    }
 
-	if ((create_socket = socket(AF_INET, SOCK_STREAM, 0)) > 0){    
-	  //printf("The socket was created\n");
-	}
+    //This is the in_graph for get_edge
+    else if (httpStatus == 203) {
+        //printf("print graph");
+        snprintf(reply, 1024, "HTTP/1.1 400 OK\nContent-Length: 18\nContent-Type: application/json\n\n{\"in_graph\":false}\r\n");
+    }
 
-	address.sin_family = AF_INET;    
-	address.sin_addr.s_addr = INADDR_ANY;    
-	address.sin_port = htons(atoi(argv[1]));    
+    //This is the getNeighbors return code
+    else if (httpStatus == -998) {
+        //deal with getNeighbors
+        uint64_t* neighborArray = retObject->neighborArray;
+        char neighborText[(retObject->neighborArrayLength*2)];
 
-	if (bind(create_socket, (struct sockaddr *) &address, sizeof(address)) == 0){    
-	  //printf("Binding Socket\n");
-	}
-
-	struct Graph* graph = createGraph();
-
-	while (keepGoing) {
-        bzero(buffer, bufsize);
-        if (listen(create_socket, 10) < 0) {    
-         perror("server: listen");    
-         exit(1);    
-        }    
-
-        if ((new_socket = accept(create_socket, (struct sockaddr *) &address, &addrlen)) < 0) {    
-         perror("server: accept");    
-         exit(1);    
-        }    
-
-        if (new_socket > 0){    
-         //printf("The Client is connected...\n");
-        }
-
-        recv(new_socket, buffer, bufsize, 0);    
-        printf("REQUEST:\n%s\n", buffer);   
-
-        struct ReturnObject* retObject = getFunction(graph, buffer);
-        int httpStatus = retObject->httpStatus, node1 = retObject->firstNodeId, node2 = retObject->secondNodeId;
-
-        char reply[1024];
-
-        if (httpStatus == 204 || httpStatus == 400 || httpStatus == -1) {
-        	//if error statement, find other error values
-            //printf("\nerror code\n");
-        	snprintf(reply, 1024, "HTTP/1.1 %i OK\n\nBad Req. ID: %i", httpStatus, httpStatus);
-        }
-
-        else if (httpStatus == 202) {
-            //printf("print graph");
-            snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: 17\nContent-Type: application/json\n\n{\"in_graph\":true}\r\n");
-        }
-
-        else if (httpStatus == 203) {
-            //printf("print graph");
-            snprintf(reply, 1024, "HTTP/1.1 400 OK\nContent-Length: 18\nContent-Type: application/json\n\n{\"in_graph\":false}\r\n");
-        }
-
-        else if (httpStatus == -998) {
-            //deal with getNeighbors
-            uint64_t* neighborArray = retObject->neighborArray;
-            char neighborText[(retObject->neighborArrayLength*2)];
-
-            int j = 0;
-            for (int i=0; i < (retObject->neighborArrayLength*2); i++) {
-                if (i%2 == 0) {
-                    neighborText[i] = (int)neighborArray[j] + '0';
-                    j++;
-                }
-
-                else {
-                    neighborText[i] = ',';
-                }
+        int j = 0;
+        for (int i=0; i < (retObject->neighborArrayLength*2); i++) {
+            if (i%2 == 0) {
+                neighborText[i] = (int)neighborArray[j] + '0';
+                j++;
             }
 
-            neighborText[retObject->neighborArrayLength*2 - 1] = '\0';
-            snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: %f\nContent-Type: application/json\n\n{\"node_id\":%i,\"neighbors\":[%s]}\r\n", 12 + (floor(log10(abs(node1))) + 1) + 14 + (retObject->neighborArrayLength*2), node1, neighborText);
+            else {
+                neighborText[i] = ',';
+            }
         }
 
-        else if (httpStatus == -997) {
-            uint64_t distance = retObject->distance;
-            printf("distance: %lld\n", distance);
-        	snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: %f\nContent-Type: application/json\n\n{\"node_a_id\":%i,\"node_b_id\":%i,\"distance\":%lld}\r\n", 39 + floor(log10(abs(node1)) + 1) + floor(log10(abs(node2)) + 1) + floor(log10(abs(distance)) + 1), node1, node2, distance);
-        }
+        neighborText[retObject->neighborArrayLength*2 - 1] = '\0';
+        snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: %f\nContent-Type: application/json\n\n{\"node_id\":%i,\"neighbors\":[%s]}\r\n", 12 + (floor(log10(abs(node1))) + 1) + 14 + (retObject->neighborArrayLength*2), node1, neighborText);
+    }
 
-        else if (node1 != -1 && node2 == -1) {
-            snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: %f\nContent-Type: application/json\n\n{\"node_id\":%i}\r\n", 12 + floor(log10(abs(node1)) + 1) + floor(log10(abs(node2)) + 1), node1);
-        }
+    //This is the shortest path ret code
+    else if (httpStatus == -997) {
+        uint64_t distance = retObject->distance;
+        printf("distance: %lld\n", distance);
+        snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: %f\nContent-Type: application/json\n\n{\"node_a_id\":%i,\"node_b_id\":%i,\"distance\":%lld}\r\n", 39 + floor(log10(abs(node1)) + 1) + floor(log10(abs(node2)) + 1) + floor(log10(abs(distance)) + 1), node1, node2, distance);
+    }
 
-        else if (node1 != -1 && node2 != -1) {
-        	//if 2 nodes
-            //printf("\nboth nodes\n");
-            snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: %f\nContent-Type: application/json\n\n{\"node_a_id\":%i,\"node_b_id\":%i}\r\n", 27 + floor(log10(abs(node1)) + 1) + floor(log10(abs(node2)) + 1), node1, node2);
-        }
-        //printf("PRINTING JSON: %s\n", reply);
-        write(new_socket, reply, strlen(reply));
-        free(retObject);
-        close(new_socket);    
-	}    
+    //basically at ALL other times when we have the first node and not the other
+    else if (node1 != -1 && node2 == -1) {
+        snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: %f\nContent-Type: application/json\n\n{\"node_id\":%i}\r\n", 12 + floor(log10(abs(node1)) + 1) + floor(log10(abs(node2)) + 1), node1);
+    }
 
-	close(create_socket); 
-    exit(0);   
+    //all other times we have both codes
+    else if (node1 != -1 && node2 != -1) {
+        //if 2 nodes
+        //printf("\nboth nodes\n");
+        snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: %f\nContent-Type: application/json\n\n{\"node_a_id\":%i,\"node_b_id\":%i}\r\n", 27 + floor(log10(abs(node1)) + 1) + floor(log10(abs(node2)) + 1), node1, node2);
+    }
+
+    return reply;
+}
+
+struct Graph* graph;
+
+// Define an event handler function
+static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
+  struct mbuf *io = &nc->recv_mbuf;
+  struct ReturnObject* retObject;
+
+  char buff[1024];
+
+  switch (ev) {
+    case MG_EV_HTTP_REQUEST:
+      // This event handler implements simple TCP echo server
+      retObject = getFunction(graph, io->buf, io->len);
+
+      parse(retObject, buff);
+      mg_send(nc, buff, strlen(buff));
+      //mg_send(nc, io->buf, io->len);  // Echo received data back
+      mbuf_remove(io, io->len);      // Discard data from recv buffer
+      break;
+    default:
+      break;
+  }
+}
+
+int main(int argc, char* argv[]) {
+    if (argv[1] == NULL) {
+        perror("Please enter the port #");
+    }
+
+    graph = createGraph();
+    struct mg_mgr mgr;
+    struct mg_connection *nc;
+    mg_mgr_init(&mgr, NULL);  // Initialize event manager object
+
+    // Note that many connections can be added to a single event manager
+    // Connections can be created at any point, e.g. in event handler function
+    nc = mg_bind(&mgr, argv[1], ev_handler);  // Create listening connection and add it to the event manager
+
+    // listen for http
+    mg_set_protocol_http_websocket(nc);
+
+    for (;;) {  // Start infinite event loop
+    mg_mgr_poll(&mgr, 1000);
+    }
+
+    mg_mgr_free(&mgr);
+    return 0;
 }
