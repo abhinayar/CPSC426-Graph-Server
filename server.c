@@ -291,6 +291,10 @@ int main(int argc, char *argv[])
         	snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: %f\nContent-Type: application/json\n\n{\"node_a_id\":%i,\"node_b_id\":%i,\"distance\":%lld}\r\n", 39 + floor(log10(abs(node1)) + 1) + floor(log10(abs(node2)) + 1) + floor(log10(abs(distance)) + 1), node1, node2, distance);
         }
 
+        else if (node1 != -1 && node2 == -1) {
+            snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: %f\nContent-Type: application/json\n\n{\"node_id\":%i}\r\n", 12 + floor(log10(abs(node1)) + 1) + floor(log10(abs(node2)) + 1), node1);
+        }
+
         else if (node1 != -1 && node2 != -1) {
         	//if 2 nodes
             //printf("\nboth nodes\n");
