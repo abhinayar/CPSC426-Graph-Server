@@ -114,7 +114,11 @@ uint64_t shortestPath(struct Graph* graph, uint64_t startNodeId, uint64_t endNod
 	uint64_t startNodeIndex = nodeExist(graph, startNodeId);
 	uint64_t endNodeIndex = nodeExist(graph, endNodeId);
 
-	if ((startNodeIndex != -1 && endNodeIndex != -1) || startNodeId != endNodeId) {
+	if (startNodeIndex == endNodeIndex) {
+		return 204;
+	}
+
+	else if (startNodeIndex != -1 && endNodeIndex != -1) {
 		//level for the first node = 0
 		graph->nodeArray[startNodeIndex].level = 0;
 

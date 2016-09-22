@@ -222,7 +222,7 @@ struct ReturnObject* getFunction(struct Graph* graph, char request[], int length
 
     //why not print the graph anyways?
     //Cant fail the pset worse than I already am right?
-    printGraph(graph);
+    //printGraph(graph);
     return retObject;
 }
 
@@ -236,19 +236,19 @@ char* parse(struct ReturnObject* retObject, char* reply) {
 
     //These are the error httpStatusie
     if (httpStatus == 204 || httpStatus == 400 || httpStatus == -1) {
-        snprintf(reply, 1024, "HTTP/1.1 %i OK\n\nBad Req. ID: %i", httpStatus, httpStatus);
+        snprintf(reply, 1024, "HTTP/1.1 %i OK\r\n\r\n", httpStatus);
     }
 
     //This is the in_graph for get_node 
     else if (httpStatus == 202) {
         //printf("print graph");
-        snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: 17\nContent-Type: application/json\n\n{\"in_graph\":true}\r\n");
+        snprintf(reply, 1024, "HTTP/1.1 200 OK\r\nContent-Length: 17\r\nContent-Type: application/json\r\n\r\n{\"in_graph\":true}\r\n");
     }
 
     //This is the in_graph for get_edge
     else if (httpStatus == 203) {
         //printf("print graph");
-        snprintf(reply, 1024, "HTTP/1.1 400 OK\nContent-Length: 18\nContent-Type: application/json\n\n{\"in_graph\":false}\r\n");
+        snprintf(reply, 1024, "HTTP/1.1 400 OK\r\nContent-Length: 18\r\nContent-Type: application/json\r\n\r\n{\"in_graph\":false}\r\n");
     }
 
     //This is the getNeighbors return code
@@ -282,14 +282,14 @@ char* parse(struct ReturnObject* retObject, char* reply) {
 
     //basically at ALL other times when we have the first node and not the other
     else if (node1 != -1 && node2 == -1) {
-        snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: %f\nContent-Type: application/json\n\n{\"node_id\":%i}\r\n", 12 + floor(log10(abs(node1)) + 1) + floor(log10(abs(node2)) + 1), node1);
+        snprintf(reply, 1024, "HTTP/1.1 200 OK\r\nContent-Length: %i\r\nContent-Type: application/json\r\n\r\n{\"node_id\":%i}\r\n", 12 + (int)floor(log10(abs(node1))) + 1, node1);
     }
 
     //all other times we have both codes
     else if (node1 != -1 && node2 != -1) {
         //if 2 nodes
         //printf("\nboth nodes\n");
-        snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: %f\nContent-Type: application/json\n\n{\"node_a_id\":%i,\"node_b_id\":%i}\r\n", 27 + floor(log10(abs(node1)) + 1) + floor(log10(abs(node2)) + 1), node1, node2);
+        snprintf(reply, 1024, "HTTP/1.1 200 OK\r\nContent-Length: %i\r\nContent-Type: application/json\r\n\r\n{\"node_a_id\":%i,\"node_b_id\":%i}\r\n", 27 + (int)floor(log10(abs(node1)) + 1) + (int)floor(log10(abs(node2))+1), node1, node2);
     }
 
     return reply;
@@ -311,6 +311,7 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
       retObject = getFunction(graph, io->buf, io->len);
 
       buff = parse(retObject, buff);
+      printf("\nbuff: %s", buff);
       mg_send(nc, buff, strlen(buff));
       //mg_send(nc, io->buf, io->len);  // Echo received data back
       mbuf_remove(io, io->len);      // Discard data from recv buffer
