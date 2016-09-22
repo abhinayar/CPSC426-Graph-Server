@@ -41,6 +41,7 @@ struct ReturnObject* getFunction(struct Graph* graph, char request[], int length
 
     //First let us null terminate the request string from Mongoose
     request[length] = '\0';
+    //printf("req: %s\n", request);
 
     //First get the function name
     //Get request length
@@ -52,22 +53,22 @@ struct ReturnObject* getFunction(struct Graph* graph, char request[], int length
     char substring[substringLength];
     //copy the request starting at the 13th char 
     strcpy(substring, request+13);
+    //printf("substr: %s\n", substring);
 
     //The first whitespace is the first char after the funct name
     int indexOfFirstWhitespace;
     //Find the index of it by strchr, etc.
     char* pointerOfFirstWhitespace = strchr(substring, ' ');
     indexOfFirstWhitespace = (int)(pointerOfFirstWhitespace - substring);
-    
     //The index of the first whitespace will be the length of the funct.
     int lengthOfFunction = indexOfFirstWhitespace;
     //define functionName buffer
     char functionName[lengthOfFunction];
-
     //strncpy that shit...
     strncpy(functionName, substring, lengthOfFunction * sizeof(char));
     //null terminate
     functionName[lengthOfFunction] = '\0';
+    //printf("func name: %s\n", functionName);
 
     //now get the json data
 
@@ -106,16 +107,17 @@ struct ReturnObject* getFunction(struct Graph* graph, char request[], int length
     indexOfFirstCurly = (int)(pointerToFirstCurly - substring);
     //length of JSON will be length of sbstring - index of first curly (no payload after jSON assumption... please don't be wrong)
     //Honestly making a bunch of assumptions about input validity here so pray for me. (i.e. the specs could be more detailed)
-    int lengthOfJSON = strlen(substring) - (int)indexOfFirstCurly;
+    int lengthOfJSON = (int)strlen(substring) - (int)indexOfFirstCurly;
+    //printf("length of json: %i", lengthOfJSON+1);
 
     //define json buff
     char jsonSubstring[lengthOfJSON];
     //use STRNcpy... hear its safer than strcpy
-    strncpy(functionName, substring+indexOfFirstCurly, lengthOfJSON * sizeof(char));
+    strncpy(jsonSubstring, &substring[indexOfFirstCurly], lengthOfJSON * sizeof(char));
     //null term.
-    jsonSubstring[lengthOfJSON] = '\0';
+    jsonSubstring[lengthOfJSON+1] = '\0';
 
-    printf("\nThe JSON: %s\n", jsonSubstring);
+    //printf("\nThe JSON: %s\n", jsonSubstring);
 
     //create the RETURN OBJECT
     //We're finally going to do something returnable
@@ -224,7 +226,7 @@ struct ReturnObject* getFunction(struct Graph* graph, char request[], int length
     return retObject;
 }
 
-char* parse(struct ReturnObject* retObject, char reply[]) {
+char* parse(struct ReturnObject* retObject, char* reply) {
     //Begin the long convoluted parsing function
 
     //Get the HTTPStatus from retObject
@@ -274,7 +276,7 @@ char* parse(struct ReturnObject* retObject, char reply[]) {
     //This is the shortest path ret code
     else if (httpStatus == -997) {
         uint64_t distance = retObject->distance;
-        printf("distance: %" PRIu64 "\n", distance);
+        //printf("distance: %" PRIu64 "\n", distance);
         snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: %f\nContent-Type: application/json\n\n{\"node_a_id\":%i,\"node_b_id\":%i,\"distance\":%" PRIu64 "}\r\n", 39 + floor(log10(abs(node1)) + 1) + floor(log10(abs(node2)) + 1) + floor(log10(abs(distance)) + 1), node1, node2, distance);
     }
 
@@ -300,14 +302,15 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
   struct mbuf *io = &nc->recv_mbuf;
   struct ReturnObject* retObject;
 
-  char buff[1024];
+  int buffSize = 1024;
+  char* buff = malloc(sizeof(char) * buffSize);
 
   switch (ev) {
     case MG_EV_HTTP_REQUEST:
       // This event handler implements simple TCP echo server
       retObject = getFunction(graph, io->buf, io->len);
 
-      parse(retObject, buff);
+      buff = parse(retObject, buff);
       mg_send(nc, buff, strlen(buff));
       //mg_send(nc, io->buf, io->len);  // Echo received data back
       mbuf_remove(io, io->len);      // Discard data from recv buffer
