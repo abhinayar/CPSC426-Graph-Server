@@ -277,7 +277,7 @@ char* parse(struct ReturnObject* retObject, char* reply) {
     else if (httpStatus == -997) {
         uint64_t distance = retObject->distance;
         //printf("distance: %" PRIu64 "\n", distance);
-        snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: %f\nContent-Type: application/json\n\n{\"node_a_id\":%i,\"node_b_id\":%i,\"distance\":%" PRIu64 "}\r\n", 39 + floor(log10(abs(node1)) + 1) + floor(log10(abs(node2)) + 1) + floor(log10(abs(distance)) + 1), node1, node2, distance);
+        snprintf(reply, 1024, "HTTP/1.1 200 OK\r\nContent-Length: %i\r\nContent-Type: application/json\r\n\r\n{\"distance\":%" PRIu64 "}\r\n", 13 + (int)floor(log10(abs(distance)) + 1), distance);
     }
 
     //basically at ALL other times when we have the first node and not the other
