@@ -236,7 +236,13 @@ char* parse(struct ReturnObject* retObject, char* reply) {
 
     //These are the error httpStatusie
     if (httpStatus == 204 || httpStatus == 400 || httpStatus == -1) {
-        snprintf(reply, 1024, "HTTP/1.1 %i OK\r\n\r\n", httpStatus);
+        if (httpStatus == 204) {
+            snprintf(reply, 1024, "HTTP/1.1 %i OK\r\nContent-Length: 0\r\n\r\n", httpStatus);
+        }
+
+        else {
+            snprintf(reply, 1024, "HTTP/1.1 %i Bad Request\r\nContent-Length: 0\r\n\r\n", httpStatus);
+        }
     }
 
     //This is the in_graph for get_node 
