@@ -296,7 +296,7 @@ int main(int argc, char *argv[])
             //printf("\nboth nodes\n");
             snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: %f\nContent-Type: application/json\n\n{\"node_a_id\":%i,\"node_b_id\":%i}\r\n", 27 + floor(log10(abs(node1)) + 1) + floor(log10(abs(node2)) + 1), node1, node2);
         }
-
+        printf("PRINTING JSON: %s\n", reply);
         write(new_socket, reply, strlen(reply));
         free(retObject);
         close(new_socket);    
