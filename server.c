@@ -16,8 +16,8 @@
 
 struct ReturnObject {
     int httpStatus;
-    int firstNodeId;
-    int secondNodeId;
+    uint64_t firstNodeId;
+    uint64_t secondNodeId;
     bool inGraph;
     uint64_t* neighborArray;
     uint64_t neighborArrayLength;
@@ -173,7 +173,7 @@ struct ReturnObject* getFunction(struct Graph* graph, char request[], int length
     }
 
     //some vars for the hell of it.
-    int firstNodeId = -1, secondNodeId = -1;
+    uint64_t firstNodeId = -1, secondNodeId = -1;
     //Set the values of those wonderful vars we created for ease of use.
     firstNodeId = retObject->firstNodeId, secondNodeId = retObject->secondNodeId;
 
@@ -248,7 +248,8 @@ char* parse(struct ReturnObject* retObject, char* reply) {
     //Get the HTTPStatus from retObject
     //httpStatus may not always reflect the actual HTTP Status
     //Sometimes it returns codes which we will parse/analyze here into a char buffer
-    int httpStatus = retObject->httpStatus, node1 = retObject->firstNodeId, node2 = retObject->secondNodeId;
+    int httpStatus = retObject->httpStatus;
+    uint64_t node1 = retObject->firstNodeId, node2 = retObject->secondNodeId;
 
     //These are the error httpStatusie
     if (httpStatus == 204 || httpStatus == 400 || httpStatus == -1) {
@@ -309,11 +310,11 @@ char* parse(struct ReturnObject* retObject, char* reply) {
             
             printf("output: %s",output);
 
-            snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: %i\nContent-Type: application/json\n\n{\"node_id\":%i,\"neighbors\":[%s]}\r\n", 12 + (int)(floor(log10(abs(node1))) + 1) + 15 + (int)strlen(output), node1, output);
+            snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: %i\nContent-Type: application/json\n\n{\"node_id\":%" PRIu64 ",\"neighbors\":[%s]}\r\n", 12 + (int)(floor(log10(abs(node1))) + 1) + 15 + (int)strlen(output), node1, output);
         }
 
         if (retObject->neighborArrayLength == 0) {
-            snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: %i\nContent-Type: application/json\n\n{\"node_id\":%i,\"neighbors\":[]}\r\n", 12 + (int)(floor(log10(abs(node1))) + 1) + 15, node1);
+            snprintf(reply, 1024, "HTTP/1.1 200 OK\nContent-Length: %i\nContent-Type: application/json\n\n{\"node_id\":%" PRIu64 ",\"neighbors\":[]}\r\n", 12 + (int)(floor(log10(abs(node1))) + 1) + 15, node1);
         }
 
         
@@ -328,14 +329,14 @@ char* parse(struct ReturnObject* retObject, char* reply) {
 
     //basically at ALL other times when we have the first node and not the other
     else if (node1 != -1 && node2 == -1) {
-        snprintf(reply, 1024, "HTTP/1.1 200 OK\r\nContent-Length: %i\r\nContent-Type: application/json\r\n\r\n{\"node_id\":%i}\r\n", 12 + (int)floor(log10(abs(node1))) + 1, node1);
+        snprintf(reply, 1024, "HTTP/1.1 200 OK\r\nContent-Length: %i\r\nContent-Type: application/json\r\n\r\n{\"node_id\":%" PRIu64 "}\r\n", 12 + (int)floor(log10(abs(node1))) + 1, node1);
     }
 
     //all other times we have both codes
     else if (node1 != -1 && node2 != -1) {
         //if 2 nodes
         //printf("\nboth nodes\n");
-        snprintf(reply, 1024, "HTTP/1.1 200 OK\r\nContent-Length: %i\r\nContent-Type: application/json\r\n\r\n{\"node_a_id\":%i,\"node_b_id\":%i}\r\n", 27 + (int)floor(log10(abs(node1)) + 1) + (int)floor(log10(abs(node2))+1), node1, node2);
+        snprintf(reply, 1024, "HTTP/1.1 200 OK\r\nContent-Length: %i\r\nContent-Type: application/json\r\n\r\n{\"node_a_id\":%" PRIu64 ",\"node_b_id\":%" PRIu64 "}\r\n", 27 + (int)floor(log10(abs(node1)) + 1) + (int)floor(log10(abs(node2))+1), node1, node2);
     }
 
     return reply;
