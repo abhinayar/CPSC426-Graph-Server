@@ -22,4 +22,4 @@ curl -H "Content-Type: application/json" -X POST -d '{"node_a_id":7,"node_b_id":
 curl -H "Content-Type: application/json" -X POST -d '{"node_a_id":9,"node_b_id":11}' http://127.0.0.1:8000/api/v1/add_edge
 curl -H "Content-Type: application/json" -X POST -d '{"node_a_id":10,"node_b_id":11}' http://127.0.0.1:8000/api/v1/add_edge
 
-curl -H "Content-Type: application/json" -X POST -d '{"node_a_id":1,"node_b_id":11}' http://127.0.0.1:8000/api/v1/shortest_path
+curl -H "Content-Type: application/json" -X POST -d '{"node_id":3}' http://127.0.0.1:8000/api/v1/get_neighbors
