@@ -318,8 +318,9 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
 }
 
 int main(int argc, char* argv[]) {
-    if (argv[1] == NULL) {
+    if (argc < 2) {
         perror("Please enter the port #");
+        exit(255);
     }
 
     graph = createGraph();
